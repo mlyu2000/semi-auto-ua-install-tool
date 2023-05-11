@@ -47,6 +47,7 @@ class UAinputconfig():
         # 6 | click | name=deployname |
         self.driver.find_element(By.NAME, "deployname").click()
         # 7 | type | name=deployname | uacluster
+        self.driver.find_element(By.NAME, "deployname").send_keys(Keys.SHIFT, Keys.ARROW_UP)
         self.driver.find_element(By.NAME, "deployname").send_keys(config["Installation_Name"])
         # 8 | click | name=domainname |
         self.driver.find_element(By.NAME, "domainname").click()
@@ -73,7 +74,7 @@ class UAinputconfig():
         self.driver.find_element(By.NAME, "onpremconfig.vsphere_server").send_keys(config["vSphere_Server"])
         # 18 | click | name=onpremconfig.vsphere_user |
         self.driver.find_element(By.NAME, "onpremconfig.vsphere_user").click()
-        # 19 | type | name=onpremconfig.vsphere_user | administrator@vsphere.local
+        # 19 | type | name=onpremconfig.vsphere_user |
         self.driver.find_element(By.NAME, "onpremconfig.vsphere_user").send_keys(config["vSphere_User"])
         # 20 | click | name=onpremconfig.vsphere_password |
         self.driver.find_element(By.NAME, "onpremconfig.vsphere_password").click()
@@ -108,25 +109,30 @@ class UAinputconfig():
         self.driver.find_element(By.NAME, "onpremconfig.vsphere_network").send_keys(config["vSphere_Network"])
         # 34 | click | name=onpremconfig.vm_name |
         self.driver.find_element(By.NAME, "onpremconfig.vm_name").click()
+        self.driver.find_element(By.NAME, "onpremconfig.vm_name").send_keys(Keys.SHIFT, Keys.ARROW_UP)
         self.driver.find_element(By.NAME, "onpremconfig.vm_name").send_keys(config["VM_Name"])
         # 35 | click | name=onpremconfig.vm_dns_server_list |
         self.driver.find_element(By.NAME, "onpremconfig.vm_dns_server_list").click()
         # 36 | type | name=onpremconfig.vm_dns_server_list | 10.85.235.100
         self.driver.find_element(By.NAME, "onpremconfig.vm_dns_server_list").send_keys(config["VM_DNS_Server_List"])
         # 38 | type | name=onpremconfig.k8s_tmp_name | ezua_k8s_q2_airgapped_testing
+        self.driver.find_element(By.NAME, "onpremconfig.k8s_tmp_name").click()
+        self.driver.find_element(By.NAME, "onpremconfig.k8s_tmp_name").send_keys(Keys.SHIFT, Keys.ARROW_UP)
         self.driver.find_element(By.NAME, "onpremconfig.k8s_tmp_name").send_keys(config["Kubernetes_Template_Name"])
         # 39 | click | name=onpremconfig.vm_folder |
         self.driver.find_element(By.NAME, "onpremconfig.vm_folder").click()
         # 40 | type | name=onpremconfig.vm_folder | EZUA-SG
+
         self.driver.find_element(By.NAME, "onpremconfig.vm_folder").send_keys(config["VM_Folder"])
         # 45 | click | name=onpremconfig.vm_ipv4_netmask |
         self.driver.find_element(By.NAME, "onpremconfig.vm_ipv4_netmask").click()
         # 47 | type | name=onpremconfig.vm_ipv4_netmask | 21
+        self.driver.find_element(By.NAME, "onpremconfig.vm_ipv4_netmask").send_keys(Keys.SHIFT, Keys.ARROW_UP)
         self.driver.find_element(By.NAME, "onpremconfig.vm_ipv4_netmask").send_keys(config["VM_IPV4_Netmask"])
         # 41 | click | name=onpremconfig.vm_default_gateway |
         self.driver.find_element(By.NAME, "onpremconfig.vm_default_gateway").click()
         # 44 | type | name=onpremconfig.vm_default_gateway | 10.85.236.254
-        self.driver.find_element(By.NAME, "onpremconfig.vm_default_gateway").send_keys(["VM_Default_Gateway"])
+        self.driver.find_element(By.NAME, "onpremconfig.vm_default_gateway").send_keys(config["VM_Default_Gateway"])
         # 48 | click | name=onpremconfig.masters_node_name |
         self.driver.find_element(By.NAME, "onpremconfig.masters_node_name").click()
         # 49 | type | name=onpremconfig.masters_node_name | UAcontrol
@@ -166,7 +172,7 @@ class UAinputconfig():
         self.driver.find_element(By.NAME, "authconfig.internal.admin_user.email").send_keys(config["LDAP_Email"])
         # 66 | click | name=authconfig.internal.admin_user.password |
         self.driver.find_element(By.NAME, "authconfig.internal.admin_user.password").click()
-        # 67 | type | name=authconfig.internal.admin_user.password | Admin123!
+        # 67 | type | name=authconfig.internal.admin_user.password |
         self.driver.find_element(By.NAME, "authconfig.internal.admin_user.password").send_keys(config["LDAP_Password"])
         # 68 | click | css=.gBDKVT > .StyledBox-sc-13pk1d4-0 |
         self.driver.find_element(By.CSS_SELECTOR, ".gBDKVT > .StyledBox-sc-13pk1d4-0").click()

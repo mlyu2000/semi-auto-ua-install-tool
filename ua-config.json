@@ -4,9 +4,9 @@
   "Domain_Name": "ezmeral.sg",
   "HTTP_Proxy": "",
   "HTTPS_Proxy": "",
-  "No_Proxy": "",
+  "No_Proxy": "host.docker.internal,10.96.0.1,10.96.0.0/12,10.96.0.12,10.244.0.0/16,10.43.0.0/16,*.external.hpe.local,localhost,*.cluster.local,*.svc,*.default.svc,127.0.0.1,*.ezmeral.sg",
   "vSphere_Server": "10.85.235.77",
-  "vSphere_User": "administrator@vsphere.local",
+  "vSphere_User": "",
   "vSphere_Password": "",
   "vSphere_Cluster_Management": "EZAF-MGMT-CLUSTER",
   "vSphere_Cluster_Compute": "EZAF-WORKER-CLUSTER",
@@ -28,5 +28,5 @@
   "LDAP_Username": "admin",
   "LDAP_Full_Name": "admin",
   "LDAP_Email": "admin@ezmeral.sg",
-  "LDAP_Password": "Admin123!"
+  "LDAP_Password": ""
 }

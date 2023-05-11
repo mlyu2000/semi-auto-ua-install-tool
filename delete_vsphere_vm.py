@@ -1,16 +1,19 @@
-#pip install pyvmomi first
+#pip install pyvmomi
 
 import ssl
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim
 from pyVim.task import WaitForTask
+import json
+
+with open("ua-config.json") as f:
+    config = json.load(f)
 
 # Authenticate with vCenter Server
-server = '10.85.235.77'
-username = "administrator@vsphere.local"
-password = "P@ssw0rd"
-vm_name_list = ['UAcontrol','UAworker1','UAworker2','UAworker3']
-
+server = config["vSphere_Server"]
+username = config["vSphere_User"]
+password = config["vSphere_Password"]
+vm_name_list = (config['Workers_Hostnames']+','+(config["Control_Plane_Hostnames"])).split(',')
 def delete_vm(vm_name: str):
     # Find the virtual machine to delete
     content = si.RetrieveContent()
