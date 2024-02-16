@@ -6,6 +6,8 @@
 # Don't terminate the program during installation or it will close the browser
 # If need to rerun, terminate this program and run again.
 # adjust the timeout if the network is slow
+# Deploy Target values allow "Bare Metal","VM","Openshift"
+
 import time
 import json
 from selenium import webdriver
@@ -20,11 +22,11 @@ import json
 with open("ua-config.json") as f:
     config = json.load(f)
 
-timeout = 10
+timeout = 300
 
 class UAinputconfig():
     def setup_method(self):
-        self.driver = webdriver.Chrome()
+        self.driver = webdriver.Chrome('./chromedriver')
         self.vars = {}
 
     def teardown_method(self):
@@ -33,150 +35,146 @@ class UAinputconfig():
     def input_config(self):
         # Test name: UA input config
         # Step # | name | target | value
-        # 1 | open | http://10.85.236.99:8080/ |
+        # 1 | open | config['UA_URL'] = "http://localhost:8080/" |
         self.driver.get(config['UA_URL'])
         # 2 | setWindowSize | 1679x1297 |
         self.driver.set_window_size(1679, 1297)
         # 3 | waitForElementVisible | css=.caUcER:nth-child(2) .StyledButtonKind-sc-1vhfpnt-0 | 0
         WebDriverWait(self.driver, timeout).until(expected_conditions.visibility_of_element_located(
-            (By.CSS_SELECTOR, ".caUcER:nth-child(2) .StyledButtonKind-sc-1vhfpnt-0")))
-        # 4 | click | css=.caUcER:nth-child(2) .StyledButtonKind-sc-1vhfpnt-0 |
-        self.driver.find_element(By.CSS_SELECTOR, ".caUcER:nth-child(2) .StyledButtonKind-sc-1vhfpnt-0").click()
+            (By.CSS_SELECTOR, ".dYiJaI:nth-child(5)")))
+        # 4 | New install or Using Existing kubeconfig file
+
+        if config['Kubeconfig_Path'] == '':
+            self.driver.find_element(By.CSS_SELECTOR, ".dYiJaI:nth-child(5)").click()
+        else:
+            self.driver.find_element(By.ID, "ezua-upload-kubeconfig-form-configfile").send_keys(config['Kubeconfig_Path'])
+            self.driver.find_element(By.ID, "ezua-upload-kubeconfig-form-submit").click()
+
         # 5 | waitForElementVisible | name=deployname | 0
-        WebDriverWait(self.driver, timeout).until(expected_conditions.visibility_of_element_located((By.NAME, "deployname")))
+        WebDriverWait(self.driver, timeout).until(expected_conditions.visibility_of_element_located((By.CSS_SELECTOR, ".StyledBox-sc-13pk1d4-0:nth-child(2) > .StyledBox-sc-13pk1d4-0 > .keMOfF")))
+
         # 6 | click | name=deployname |
-        self.driver.find_element(By.NAME, "deployname").click()
-        # 7 | type | name=deployname | uacluster
-        self.driver.find_element(By.NAME, "deployname").send_keys(Keys.SHIFT, Keys.ARROW_UP)
-        self.driver.find_element(By.NAME, "deployname").send_keys(config["Installation_Name"])
-        # 8 | click | name=domainname |
-        self.driver.find_element(By.NAME, "domainname").click()
-        # 9 | type | name=domainname | ezmeral.sg
-        self.driver.find_element(By.NAME, "domainname").send_keys(config["Domain_Name"])
-        # 10 | click | name=proxy.httpProxy |
-        self.driver.find_element(By.NAME, "proxy.httpProxy").click()
+        if config['Deploy_Target'] == "Bare Metal":
+            WebDriverWait(self.driver, timeout).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR,
+                                                                                                  ".StyledGrid-sc-1wofa1l-0:nth-child(1) > .StyledBox-sc-13pk1d4-0:nth-child(1) .StyledButtonKind-sc-1vhfpnt-0"))).click()
+        elif config['Deploy_Target'] == "VM":
+            WebDriverWait(self.driver, timeout).until(expected_conditions.presence_of_element_located(
+                (By.CSS_SELECTOR, ".StyledBox-sc-13pk1d4-0:nth-child(2) > .StyledBox-sc-13pk1d4-0 > .keMOfF"))).click()
+        elif config['Deploy_Target'] == "Openshift":
+            WebDriverWait(self.driver, timeout).until(expected_conditions.presence_of_element_located(
+                (By.CSS_SELECTOR, ".StyledGrid-sc-1wofa1l-0:nth-child(3) .keMOfF"))).click()
+            input("To be developed. Press Enter to close the browser...")
+            self.teardown_method()
+        else:
+            input("Deploy_Target invalid. Values allow 'Bare Metal','VM' and 'Openshift'. Press Enter to close the browser...")
+            self.teardown_method()
+        #Node Setup
+        WebDriverWait(self.driver, timeout).until(
+            expected_conditions.visibility_of_element_located((By.XPATH, "//span[contains(.,\'Manual Configuration\')]"))).click()
+        self.driver.find_element(By.NAME, "pphconfig.ssh_username").send_keys(Keys.SHIFT, Keys.ARROW_UP)
+        self.driver.find_element(By.NAME, "pphconfig.ssh_username").send_keys(config["Node_Setup_Username"])
+        self.driver.find_element(By.NAME, "credentialType").click()
+        if config['Node_Setup_Credntials_Type'] == "Password":
+            self.driver.find_element(By.XPATH, "//button[contains(.,\'Password\')]").click()
+            self.driver.find_element(By.NAME, "pphconfig.ssh_password").send_keys(config["Node_Setup_Password"])
+        elif config['Node_Setup_Credntials_Type'] == "SSH Key":
+            self.driver.find_element(By.XPATH, "//button[contains(.,\'SSH Key\')]").click()
+            self.driver.find_element(By.XPATH, "//button[contains(.,\'Select File\')]").send_keys(config['Node_Setup_SSH_Key_Path'])
+
+        self.driver.find_element(By.NAME, "pphconfig.controlplanes").send_keys(config["Coordinator_IPs"]+","+config["Control_Plane_IPs"])
+        self.driver.find_element(By.NAME, "pphconfig.workers").send_keys(config["Workers_IPs"])
+        self.driver.find_element(By.NAME, "pphconfig.external_url").send_keys(config["External_Cluster_Endpoint"])
+        self.driver.find_element(By.CSS_SELECTOR, ".eQEJTX > .StyledBox-sc-13pk1d4-0").click()
+
+        #Installation Details
+        self.driver.find_element(By.NAME, "deployname").send_keys("ezua")
+        self.driver.find_element(By.NAME, "domainname").send_keys("hpe.ezmeral.sg")
+        self.driver.find_element(By.NAME, "infraconfig.vcpu").send_keys(Keys.BACKSPACE*5)
+        self.driver.find_element(By.NAME, "infraconfig.vcpu").send_keys("144")
+
+        if config['Is_HA'] == "true":
+            self.driver.find_element(By.CSS_SELECTOR,
+                                     ".StyledBox-sc-13pk1d4-0:nth-child(4) > .StyledBox-sc-13pk1d4-0 > .StyledBox-sc-13pk1d4-0 > .StyledCheckBox__StyledCheckBoxContainer-sc-1dbk5ju-1 > .StyledBox-sc-13pk1d4-0 > .StyledBox-sc-13pk1d4-0").click()
+        if config['Is_GPU'] =='true':
+            self.driver.find_element(By.CSS_SELECTOR,
+                                 ".StyledBox-sc-13pk1d4-0:nth-child(5) > .StyledBox-sc-13pk1d4-0 .StyledBox-sc-13pk1d4-0 > .StyledBox-sc-13pk1d4-0").click()
+            self.driver.find_element(By.NAME, "infraconfig.vgpu").send_keys(config['VGPU'])
+            self.driver.find_element(By.NAME, "infraconfig.gpu_partition_size").click()
+            if config['GPU_Size']=='whole':
+                self.driver.find_element(By.XPATH, "//button[contains(.,\'whole\')]").click()
+            elif config['GPU_Size']=='large':
+                self.driver.find_element(By.XPATH, "//button[contains(.,\'large\')]").click()
+            elif config['GPU_Size'] == 'medium':
+                self.driver.find_element(By.XPATH, "//button[contains(.,\'medium\')]").click()
+            elif config['GPU_Size'] == 'small':
+                self.driver.find_element(By.XPATH, "//button[contains(.,\'small\')]").click()
+
+        if config['Is_airgap'] == "true":
+            self.driver.find_element(By.XPATH, "//label[contains(.,\'Air Gap Environment?\')]").click()
+        self.driver.find_element(By.NAME, "airgap.registryUrl").send_keys(config["Registry_URL"])
+        self.driver.find_element(By.NAME, "airgap.username").send_keys(config["Registry_Username"])
+        self.driver.find_element(By.NAME, "airgap.password").send_keys(config["Registry_Password"])
+
+        if config['Is_Registry_Insecure'] == "true":
+            self.driver.find_element(By.XPATH, "//label[contains(.,\'Registry Insecure\')]").click()
+        #CA cert
+        if config['Registry_CA_Cert_Path'] !='':
+            self.driver.find_element(By.ID, "airgap.registryCaFile").send_keys(config['Registry_CA_Cert_Path'])
+
+        if config['Is_Self_Signed_Cert'] == 'true':
+            self.driver.find_element(By.XPATH, "//label[contains(.,\'Use Self Signed Certificate\')]").click()
+        else:
+            self.driver.find_element(By.ID, "tlsconfig.ca").send_keys(config['TLS_CA_cert_Path'])
+            self.driver.find_element(By.ID, "tlsconfig.key").send_keys(config['TLS_Prviate_Key_Path'])
+            self.driver.find_element(By.ID, "tlsconfig.cert").send_keys(config['TLS_Cert_Path'])
+
         self.driver.find_element(By.NAME, "proxy.httpProxy").send_keys(config["HTTP_Proxy"])
-        # 11 | click | name=proxy.httpsProxy |
-        self.driver.find_element(By.NAME, "proxy.httpsProxy").click()
         self.driver.find_element(By.NAME, "proxy.httpsProxy").send_keys(config["HTTPS_Proxy"])
-        # 12 | click | name=proxy.noProxy |
-        self.driver.find_element(By.NAME, "proxy.noProxy").click()
-        # 13 | type | name=proxy.noProxy | 127.0.0.1
-        self.driver.find_element(By.NAME, "proxy.noProxy").send_keys(config["No_Proxy"])
-        # 14 | click | css=.ewwyzz |
-        self.driver.find_element(By.CSS_SELECTOR, ".ewwyzz").click()
-        # 15 | waitForElementVisible | css=.StyledHeading-sc-1rdh4aw-0 | 0
-        WebDriverWait(self.driver, timeout).until(
-            expected_conditions.visibility_of_element_located((By.CSS_SELECTOR, ".StyledHeading-sc-1rdh4aw-0")))
-        # 16 | click | name=onpremconfig.vsphere_server |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_server").click()
-        # 17 | type | name=onpremconfig.vsphere_server | 10.85.235.77
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_server").send_keys(config["vSphere_Server"])
-        # 18 | click | name=onpremconfig.vsphere_user |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_user").click()
-        # 19 | type | name=onpremconfig.vsphere_user |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_user").send_keys(config["vSphere_User"])
-        # 20 | click | name=onpremconfig.vsphere_password |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_password").click()
-        # 21 | type | name=onpremconfig.vsphere_password |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_password").send_keys(config["vSphere_Password"])
-        # 22 | click | name=onpremconfig.vsphere_cluster_mgmt |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_cluster_mgmt").click()
-        # 23 | type | name=onpremconfig.vsphere_cluster_mgmt | EZAF-MGMT-CLUSTER
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_cluster_mgmt").send_keys(
-            config["vSphere_Cluster_Management"])
-        # 24 | click | name=onpremconfig.vsphere_cluster_compute |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_cluster_compute").click()
-        # 25 | type | name=onpremconfig.vsphere_cluster_compute | EZAF-WORKER-CLUSTER
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_cluster_compute").send_keys(
-            config["vSphere_Cluster_Compute"])
-        # 26 | click | name=onpremconfig.vsphere_datacenter |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_datacenter").click()
-        # 27 | type | name=onpremconfig.vsphere_datacenter | Datacenter
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_datacenter").send_keys(config['vSphere_Data_Center'])
-        # 28 | click | name=onpremconfig.vsphere_datastore_mgmt |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_datastore_mgmt").click()
-        # 29 | type | name=onpremconfig.vsphere_datastore_mgmt | datastore-76
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_datastore_mgmt").send_keys(
-            config["vSphere_Datastore_Management"])
-        # 30 | click | name=onpremconfig.vsphere_datastore |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_datastore").click()
-        # 31 | type | name=onpremconfig.vsphere_datastore | datastore-72
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_datastore").send_keys(config["vSphere_Datastore"])
-        # 32 | click | name=onpremconfig.vsphere_network |
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_network").click()
-        # 33 | type | name=onpremconfig.vsphere_network | VM Network
-        self.driver.find_element(By.NAME, "onpremconfig.vsphere_network").send_keys(config["vSphere_Network"])
-        # 34 | click | name=onpremconfig.vm_name |
-        self.driver.find_element(By.NAME, "onpremconfig.vm_name").click()
-        self.driver.find_element(By.NAME, "onpremconfig.vm_name").send_keys(Keys.SHIFT, Keys.ARROW_UP)
-        self.driver.find_element(By.NAME, "onpremconfig.vm_name").send_keys(config["VM_Name"])
-        # 35 | click | name=onpremconfig.vm_dns_server_list |
-        self.driver.find_element(By.NAME, "onpremconfig.vm_dns_server_list").click()
-        # 36 | type | name=onpremconfig.vm_dns_server_list | 10.85.235.100
-        self.driver.find_element(By.NAME, "onpremconfig.vm_dns_server_list").send_keys(config["VM_DNS_Server_List"])
-        # 38 | type | name=onpremconfig.k8s_tmp_name | ezua_k8s_q2_airgapped_testing
-        self.driver.find_element(By.NAME, "onpremconfig.k8s_tmp_name").click()
-        self.driver.find_element(By.NAME, "onpremconfig.k8s_tmp_name").send_keys(Keys.SHIFT, Keys.ARROW_UP)
-        self.driver.find_element(By.NAME, "onpremconfig.k8s_tmp_name").send_keys(config["Kubernetes_Template_Name"])
-        # 39 | click | name=onpremconfig.vm_folder |
-        self.driver.find_element(By.NAME, "onpremconfig.vm_folder").click()
-        # 40 | type | name=onpremconfig.vm_folder | EZUA-SG
+        self.driver.find_element(By.NAME, "proxy.noProxy").send_keys(config["NO_Proxy"])
+        self.driver.find_element(By.CSS_SELECTOR, ".StyledBox-sc-13pk1d4-0:nth-child(16) span").click()
 
-        self.driver.find_element(By.NAME, "onpremconfig.vm_folder").send_keys(config["VM_Folder"])
-        # 45 | click | name=onpremconfig.vm_ipv4_netmask |
-        self.driver.find_element(By.NAME, "onpremconfig.vm_ipv4_netmask").click()
-        # 47 | type | name=onpremconfig.vm_ipv4_netmask | 21
-        self.driver.find_element(By.NAME, "onpremconfig.vm_ipv4_netmask").send_keys(Keys.SHIFT, Keys.ARROW_UP)
-        self.driver.find_element(By.NAME, "onpremconfig.vm_ipv4_netmask").send_keys(config["VM_IPV4_Netmask"])
-        # 41 | click | name=onpremconfig.vm_default_gateway |
-        self.driver.find_element(By.NAME, "onpremconfig.vm_default_gateway").click()
-        # 44 | type | name=onpremconfig.vm_default_gateway | 10.85.236.254
-        self.driver.find_element(By.NAME, "onpremconfig.vm_default_gateway").send_keys(config["VM_Default_Gateway"])
-        # 48 | click | name=onpremconfig.masters_node_name |
-        self.driver.find_element(By.NAME, "onpremconfig.masters_node_name").click()
-        # 49 | type | name=onpremconfig.masters_node_name | UAcontrol
-        self.driver.find_element(By.NAME, "onpremconfig.masters_node_name").send_keys(config["Control_Plane_Hostnames"])
-        # 50 | click | name=onpremconfig.masters_node_ip |
-        self.driver.find_element(By.NAME, "onpremconfig.masters_node_ip").click()
-        # 51 | type | name=onpremconfig.masters_node_ip | 10.85.235.95
-        self.driver.find_element(By.NAME, "onpremconfig.masters_node_ip").send_keys(config["Control_Plane_IPs"])
-        # 52 | click | name=onpremconfig.workers_node_name |
-        self.driver.find_element(By.NAME, "onpremconfig.workers_node_name").click()
-        # 53 | type | name=onpremconfig.workers_node_name | UAworker1,UAworker2,UAworker3
-        self.driver.find_element(By.NAME, "onpremconfig.workers_node_name").send_keys(config["Workers_Hostnames"])
-        # 54 | click | name=onpremconfig.workers_datastore |
-        self.driver.find_element(By.NAME, "onpremconfig.workers_datastore").click()
-        # 55 | type | name=onpremconfig.workers_datastore | datastore-72
-        self.driver.find_element(By.NAME, "onpremconfig.workers_datastore").send_keys(config["Workers_Datastore"])
-        # 56 | click | name=onpremconfig.workers_node_ip |
-        self.driver.find_element(By.NAME, "onpremconfig.workers_node_ip").click()
-        # 57 | type | name=onpremconfig.workers_node_ip | 10.85.235.96,10.85.235.97,10.85.235.98
-        self.driver.find_element(By.NAME, "onpremconfig.workers_node_ip").send_keys(config["Workers_IPs"])
-        # 58 | click | css=.gBDKVT |
-        self.driver.find_element(By.CSS_SELECTOR, ".gBDKVT").click()
-        # 59 | waitForElementVisible | css=.mDTsJ | 0
-        WebDriverWait(self.driver, timeout).until(
-            expected_conditions.visibility_of_element_located((By.CSS_SELECTOR, ".mDTsJ")))
-        # 60 | click | name=authconfig.internal.admin_user.username |
-        self.driver.find_element(By.NAME, "authconfig.internal.admin_user.username").click()
-        # 61 | type | name=authconfig.internal.admin_user.username | admin
-        self.driver.find_element(By.NAME, "authconfig.internal.admin_user.username").send_keys(config["LDAP_Username"])
-        # 62 | click | name=authconfig.internal.admin_user.fullname |
-        self.driver.find_element(By.NAME, "authconfig.internal.admin_user.fullname").click()
-        # 63 | type | name=authconfig.internal.admin_user.fullname | admin
-        self.driver.find_element(By.NAME, "authconfig.internal.admin_user.fullname").send_keys(config["LDAP_Full_Name"])
-        # 64 | click | name=authconfig.internal.admin_user.email |
-        self.driver.find_element(By.NAME, "authconfig.internal.admin_user.email").click()
-        # 65 | type | name=authconfig.internal.admin_user.email | admin@ezmeral.sg
-        self.driver.find_element(By.NAME, "authconfig.internal.admin_user.email").send_keys(config["LDAP_Email"])
-        # 66 | click | name=authconfig.internal.admin_user.password |
-        self.driver.find_element(By.NAME, "authconfig.internal.admin_user.password").click()
-        # 67 | type | name=authconfig.internal.admin_user.password |
-        self.driver.find_element(By.NAME, "authconfig.internal.admin_user.password").send_keys(config["LDAP_Password"])
-        # 68 | click | css=.gBDKVT > .StyledBox-sc-13pk1d4-0 |
-        self.driver.find_element(By.CSS_SELECTOR, ".gBDKVT > .StyledBox-sc-13pk1d4-0").click()
+        #User Authen Details
+        WebDriverWait(self.driver, timeout).until(expected_conditions.visibility_of_element_located(
+            (By.XPATH, "//span[contains(.,\'Use External LDAP Server\')]")))
+        if config['Is_External_LDAP']=="ture":
+            self.driver.find_element(By.XPATH, "//span[contains(.,\'Use External LDAP Server\')]").click()
+            if config['Is_Active_Driectory']=="ture":
+                self.driver.find_element(By.XPATH, "//span[contains(.,\'Active Directory?\')]").click()
+            self.driver.find_element(By.NAME, "authconfig.external.security_protocol").click()
+            if config['External_LDAP_Security_Protocol']=="StartTLS":
+                self.driver.find_element(By.XPATH, "//button[contains(.,\'StartTLS\')]").click()
+            elif config['External_LDAP_Security_Protocol']=="LDAPS":
+                self.driver.find_element(By.XPATH, "//button[contains(.,\'LDAPS\')]").click()
+            elif config['External_LDAP_Security_Protocol']=="None":
+                self.driver.find_element(By.XPATH, "//button[contains(.,\'None\')]").click()
+            self.driver.find_element(By.NAME, "authconfig.external.server_address").send_keys(config['External_LDAP_Server_Address'])
+            self.driver.find_element(By.NAME, "authconfig.external.server_port").send_keys(config['External_LDAP_Server_Port'])
+            self.driver.find_element(By.NAME, "authconfig.external.bind_dn").send_keys(config['External_LDAP_Bind_DN'])
+            self.driver.find_element(By.NAME, "authconfig.external.bind_password").send_keys(config['External_LDAP_Bind_Password'])
+            self.driver.find_element(By.NAME, "authconfig.external.search_base_dn").send_keys(config['External_LDAP_Search_Base_DN'])
+            if config['External_LDAP_Trust_Store_File_Path']!='':
+                self.driver.find_element(By.NAME, "authconfig.external.truststore_file").send_keys(config['External_LDAP_Trust_Store_File_Path'])
+            self.driver.find_element(By.NAME, "authconfig.external.truststore_pass").send_keys(config['External_LDAP_Trust_Store_Password'])
+            self.driver.find_element(By.NAME, "authconfig.external.user_attribute.username").send_keys(config['External_LDAP_Username_Attribute'])
+            self.driver.find_element(By.NAME, "authconfig.external.user_attribute.fullname").send_keys(config['External_LDAP_Fullname_Attribute'])
+            self.driver.find_element(By.NAME, "authconfig.external.user_attribute.email").send_keys(config['External_LDAP_Email_Attribute'])
+            self.driver.find_element(By.NAME, "authconfig.external.user_attribute.uid").send_keys(config['External_LDAP_UID_Attribute'])
+            self.driver.find_element(By.NAME, "authconfig.external.user_attribute.gid").send_keys(config['External_LDAP_GID_Attribute'])
+            self.driver.find_element(By.NAME, "authconfig.external.group_attribute.group_gid").send_keys(config['External_LDAP_GID_Attribute'])
+            self.driver.find_element(By.NAME, "authconfig.external.admin_user.username").send_keys(config['External_LDAP_Default_Admin_User'])
+            if config['Is_External_LDAP_Validation']=='false':
+                self.driver.find_element(By.XPATH,
+                                         "//span[contains(.,\'Locally test AD/LDAP settings and connection before starting install\')]").click()
+                self.driver.find_element(By.XPATH,
+                                         "//span[contains(.,\'Test AD/LDAP connection from UA cluster during install\')]").click()
 
+        else:
+            self.driver.find_element(By.NAME, "authconfig.internal.admin_user.username").send_keys(config['Internal_LDAP_Username'])
+            self.driver.find_element(By.NAME, "authconfig.internal.admin_user.fullname").send_keys(config['Internal_LDAP_Full_Name'])
+            self.driver.find_element(By.NAME, "authconfig.internal.admin_user.email").send_keys(config['Internal_LDAP_Email'])
+            self.driver.find_element(By.NAME, "authconfig.internal.admin_user.password").send_keys(config['Internal_LDAP_Password'])
+
+        # self.driver.find_element(By.XPATH, "//button[contains(.,\'Submit\')]").click()
 def main():
     auto = UAinputconfig()
     auto.setup_method()
