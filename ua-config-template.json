@@ -33,7 +33,7 @@
   "HTTPS_Proxy": "",
   "No_Proxy": "",
   "Is_External_LDAP": "true",
-  "Is_Active_Driectory": "true",
+  "Is_Active_Directory": "true",
   "External_LDAP_Security_Protocol": "LDAPS",
   "External_LDAP_Server_Address": "10.90.2.10",
   "External_LDAP_Server_Port": "389",
