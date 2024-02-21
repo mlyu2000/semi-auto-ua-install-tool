@@ -87,10 +87,11 @@ class UAinputconfig():
         self.driver.find_element(By.CSS_SELECTOR, ".eQEJTX > .StyledBox-sc-13pk1d4-0").click()
 
         #Installation Details
-        self.driver.find_element(By.NAME, "deployname").send_keys("ezua")
-        self.driver.find_element(By.NAME, "domainname").send_keys("hpe.ezmeral.sg")
+        WebDriverWait(self.driver, timeout).until(expected_conditions.presence_of_element_located(
+            (By.NAME, "deployname"))).send_keys(config["Installation_Name"])
+        self.driver.find_element(By.NAME, "domainname").send_keys(config["Domain_Name"])
         self.driver.find_element(By.NAME, "infraconfig.vcpu").send_keys(Keys.BACKSPACE*5)
-        self.driver.find_element(By.NAME, "infraconfig.vcpu").send_keys("144")
+        self.driver.find_element(By.NAME, "infraconfig.vcpu").send_keys(config["VCPU"])
 
         if config['Is_HA'] == "true":
             self.driver.find_element(By.CSS_SELECTOR,
@@ -130,15 +131,15 @@ class UAinputconfig():
 
         self.driver.find_element(By.NAME, "proxy.httpProxy").send_keys(config["HTTP_Proxy"])
         self.driver.find_element(By.NAME, "proxy.httpsProxy").send_keys(config["HTTPS_Proxy"])
-        self.driver.find_element(By.NAME, "proxy.noProxy").send_keys(config["NO_Proxy"])
-        self.driver.find_element(By.CSS_SELECTOR, ".StyledBox-sc-13pk1d4-0:nth-child(16) span").click()
+        self.driver.find_element(By.NAME, "proxy.noProxy").send_keys(config["No_Proxy"])
+        self.driver.find_element(By.XPATH, "//footer/button").click()
 
         #User Authen Details
         WebDriverWait(self.driver, timeout).until(expected_conditions.visibility_of_element_located(
             (By.XPATH, "//span[contains(.,\'Use External LDAP Server\')]")))
-        if config['Is_External_LDAP']=="ture":
+        if config['Is_External_LDAP']=="true":
             self.driver.find_element(By.XPATH, "//span[contains(.,\'Use External LDAP Server\')]").click()
-            if config['Is_Active_Driectory']=="ture":
+            if config['Is_Active_Directory']=="true":
                 self.driver.find_element(By.XPATH, "//span[contains(.,\'Active Directory?\')]").click()
             self.driver.find_element(By.NAME, "authconfig.external.security_protocol").click()
             if config['External_LDAP_Security_Protocol']=="StartTLS":

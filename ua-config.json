@@ -1,6 +1,6 @@
 {
   "UA_URL": "http://10.90.2.31:8080/",
-  "Kubeconfig_Path":"/Users/ezmeral/OneDrive - Hewlett Packard Enterprise/Eric Yu credential/UA13_Kubeconfig/ezua-kubeconfig",
+  "Kubeconfig_Path":"",
   "Deploy_Target": "VM",
 
   "Node_Setup_Username": "root",
@@ -14,12 +14,12 @@
 
   "Installation_Name": "ezua13",
   "Domain_Name": "ezua13.ezmeral.sg",
-  "VCPU": "",
+  "VCPU": "144",
   "Is_HA": "true",
-  "Is_GPU": "true",
+  "Is_GPU": "false",
   "VGPU": "",
   "GPU_Size": "whole",
-  "Is_airgap": "true",
+  "Is_airgap": "false",
   "Registry_URL": "",
   "Registry_Username": "",
   "Registry_Password": "",
@@ -33,7 +33,7 @@
   "HTTPS_Proxy": "",
   "No_Proxy": "",
   "Is_External_LDAP": "true",
-  "Is_Active_Driectory": "true",
+  "Is_Active_Directory": "true",
   "External_LDAP_Security_Protocol": "LDAPS",
   "External_LDAP_Server_Address": "10.90.2.10",
   "External_LDAP_Server_Port": "389",
