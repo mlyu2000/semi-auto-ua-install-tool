@@ -47,6 +47,10 @@ class UAinputconfig():
         if config['Kubeconfig_Path'] == '':
             self.driver.find_element(By.CSS_SELECTOR, ".dYiJaI:nth-child(5)").click()
         else:
+            try:
+                self.driver.find_element(By.XPATH, "//span[contains(.,\'currently saved\')]").click()
+            except Exception as e:
+                pass
             self.driver.find_element(By.ID, "ezua-upload-kubeconfig-form-configfile").send_keys(config['Kubeconfig_Path'])
             self.driver.find_element(By.ID, "ezua-upload-kubeconfig-form-submit").click()
 
@@ -80,10 +84,12 @@ class UAinputconfig():
         elif config['Node_Setup_Credntials_Type'] == "SSH Key":
             self.driver.find_element(By.XPATH, "//button[contains(.,\'SSH Key\')]").click()
             self.driver.find_element(By.XPATH, "//button[contains(.,\'Select File\')]").send_keys(config['Node_Setup_SSH_Key_Path'])
-
-        self.driver.find_element(By.NAME, "pphconfig.controlplanes").send_keys(config["Coordinator_IPs"]+","+config["Control_Plane_IPs"])
+        if config['Kubeconfig_Path'] == '':
+            self.driver.find_element(By.NAME, "pphconfig.controlplanes").send_keys(config["Coordinator_IPs"]+","+config["Control_Plane_IPs"])
+            self.driver.find_element(By.NAME, "pphconfig.external_url").send_keys(config["External_Cluster_Endpoint"])
+        else:
+            self.driver.find_element(By.NAME, "pphconfig.controlplanes").send_keys(config["Control_Plane_IPs"])
         self.driver.find_element(By.NAME, "pphconfig.workers").send_keys(config["Workers_IPs"])
-        self.driver.find_element(By.NAME, "pphconfig.external_url").send_keys(config["External_Cluster_Endpoint"])
         self.driver.find_element(By.CSS_SELECTOR, ".eQEJTX > .StyledBox-sc-13pk1d4-0").click()
 
         #Installation Details
